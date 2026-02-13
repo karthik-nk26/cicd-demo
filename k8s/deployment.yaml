@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: cicd-app
-        image: cicd-app:PLACEHOLDER
-        imagePullPolicy: Never
+        image: karthiknk26/cicd-app:v1
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
