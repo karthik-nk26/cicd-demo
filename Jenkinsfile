@@ -13,16 +13,23 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image in Minikube') {
+        stage('Build Docker Image') {
             steps {
                 sh '''
-                eval $(minikube docker-env)
                 docker build -t cicd-app:$IMAGE_TAG .
                 '''
             }
         }
 
-        stage('Update Kubernetes Deployment Image') {
+        stage('Load Image into Minikube') {
+            steps {
+                sh '''
+                minikube image load cicd-app:$IMAGE_TAG
+                '''
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
             steps {
                 sh '''
                 kubectl set image deployment/cicd-app cicd-app=cicd-app:$IMAGE_TAG
@@ -37,7 +44,3 @@ pipeline {
         }
     }
 }
-
-
-
-
