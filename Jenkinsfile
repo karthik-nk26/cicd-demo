@@ -17,23 +17,22 @@ pipeline {
             steps {
                 sh '''
                 eval $(minikube docker-env)
-                docker build -t cicd-app:$IMAGE_TAG .
+                docker build --no-cache -t cicd-app:${IMAGE_TAG} .
                 '''
             }
         }
 
-        stage('Update Deployment Image') {
+        stage('Deploy Updated Image to Kubernetes') {
             steps {
                 sh '''
-                kubectl set image deployment/cicd-app cicd-app=cicd-app:$IMAGE_TAG
+                kubectl set image deployment/cicd-app cicd-app=cicd-app:${IMAGE_TAG} --record
                 '''
             }
         }
 
-        stage('Apply Kubernetes Config') {
+        stage('Verify Rollout') {
             steps {
-                sh 'kubectl apply -f k8s/deployment.yaml'
-                sh 'kubectl apply -f k8s/service.yaml'
+                sh 'kubectl rollout status deployment/cicd-app'
             }
         }
     }
