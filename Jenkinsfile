@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "karthiknk26/cicd-app"
+        IMAGE_NAME = "karthiknk826/cicd-app"
         IMAGE_TAG = "v${BUILD_NUMBER}"
     }
 
@@ -44,7 +44,7 @@ pipeline {
 
         stage('Verify Rollout') {
             steps {
-                sh 'kubectl rollout status deployment cicd-app'
+                sh 'kubectl rollout status deployment/cicd-app'
             }
         }
     }
