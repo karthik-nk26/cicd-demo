@@ -1,44 +1,28 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_TAG = "v${BUILD_NUMBER}"
-    }
-
     stages {
 
-        stage('Clean Workspace') {
+        stage('Checkout Code') {
             steps {
-                deleteDir()
+                checkout scm
             }
         }
 
-        stage('Checkout Latest Code') {
-            steps {
-                git branch: 'main', url: 'https://github.com/karthik-nk26/cicd-demo.git'
-            }
-        }
-
-        stage('Build Docker Image') {
+        stage('Build Image in Minikube Docker') {
             steps {
                 sh '''
-                docker build --no-cache -t cicd-app:$IMAGE_TAG .
+                eval $(minikube docker-env)
+                docker build --no-cache -t cicd-app:latest .
                 '''
             }
         }
 
-        stage('Load Image into Minikube') {
+        stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                minikube image load cicd-app:$IMAGE_TAG
-                '''
-            }
-        }
-
-        stage('Update Deployment Image') {
-            steps {
-                sh '''
-                kubectl set image deployment/cicd-app cicd-app=cicd-app:$IMAGE_TAG
+                kubectl apply -f k8s/deployment.yaml
+                kubectl rollout restart deployment cicd-app
                 '''
             }
         }
