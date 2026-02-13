@@ -3,6 +3,12 @@ pipeline {
 
     stages {
 
+        stage('Checkout Latest Code') {
+            steps {
+                checkout scm
+            }
+        }
+
         stage('Build Docker Image in Minikube') {
             steps {
                 sh '''
