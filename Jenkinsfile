@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     environment {
+        IMAGE_NAME = "karthiknk26/cicd-app"
         IMAGE_TAG = "v${BUILD_NUMBER}"
     }
 
@@ -15,24 +16,28 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                docker build -t cicd-app:$IMAGE_TAG .
-                '''
+                sh 'docker build -t $IMAGE_NAME:$IMAGE_TAG .'
             }
         }
 
-        stage('Load Image into Minikube') {
+        stage('Login to DockerHub') {
             steps {
-                sh '''
-                minikube image load cicd-app:$IMAGE_TAG
-                '''
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh 'echo $PASS | docker login -u $USER --password-stdin'
+                }
+            }
+        }
+
+        stage('Push Image') {
+            steps {
+                sh 'docker push $IMAGE_NAME:$IMAGE_TAG'
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                kubectl set image deployment/cicd-app cicd-app=cicd-app:$IMAGE_TAG
+                kubectl set image deployment/cicd-app cicd-app=$IMAGE_NAME:$IMAGE_TAG
                 '''
             }
         }
