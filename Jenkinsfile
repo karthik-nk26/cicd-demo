@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+        IMAGE_TAG = "v${BUILD_NUMBER}"
+    }
+
     stages {
 
         stage('Checkout Code') {
@@ -9,22 +13,31 @@ pipeline {
             }
         }
 
-        stage('Build Image in Minikube Docker') {
+        stage('Build Docker Image in Minikube') {
             steps {
                 sh '''
                 eval $(minikube docker-env)
-                docker build --no-cache -t cicd-app:latest .
+                docker build -t cicd-app:$IMAGE_TAG .
                 '''
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Update Kubernetes Deployment Image') {
             steps {
                 sh '''
-                kubectl apply -f k8s/deployment.yaml
-                kubectl rollout restart deployment cicd-app
+                kubectl set image deployment/cicd-app cicd-app=cicd-app:$IMAGE_TAG
                 '''
+            }
+        }
+
+        stage('Verify Rollout') {
+            steps {
+                sh 'kubectl rollout status deployment cicd-app'
             }
         }
     }
 }
+
+
+
+
