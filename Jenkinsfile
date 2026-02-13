@@ -7,9 +7,15 @@ pipeline {
 
     stages {
 
+        stage('Clean Workspace') {
+            steps {
+                deleteDir()
+            }
+        }
+
         stage('Checkout Latest Code') {
             steps {
-                checkout scm
+                git branch: 'main', url: 'https://github.com/karthik-nk26/cicd-demo.git'
             }
         }
 
@@ -17,22 +23,16 @@ pipeline {
             steps {
                 sh '''
                 eval $(minikube docker-env)
-                docker build --no-cache -t cicd-app:${IMAGE_TAG} .
+                docker build --no-cache -t cicd-app:$IMAGE_TAG .
                 '''
             }
         }
 
-        stage('Deploy Updated Image to Kubernetes') {
+        stage('Update Deployment Image') {
             steps {
                 sh '''
-                kubectl set image deployment/cicd-app cicd-app=cicd-app:${IMAGE_TAG} --record
+                kubectl set image deployment/cicd-app cicd-app=cicd-app:$IMAGE_TAG
                 '''
-            }
-        }
-
-        stage('Verify Rollout') {
-            steps {
-                sh 'kubectl rollout status deployment/cicd-app'
             }
         }
     }
