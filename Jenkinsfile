@@ -19,11 +19,18 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image in Minikube') {
+        stage('Build Docker Image') {
             steps {
                 sh '''
-                eval $(minikube docker-env)
                 docker build --no-cache -t cicd-app:$IMAGE_TAG .
+                '''
+            }
+        }
+
+        stage('Load Image into Minikube') {
+            steps {
+                sh '''
+                minikube image load cicd-app:$IMAGE_TAG
                 '''
             }
         }
