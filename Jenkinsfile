@@ -7,16 +7,22 @@ pipeline {
             steps {
                 sh '''
                 eval $(minikube docker-env)
-                docker build -t cicd-app:latest .
+                docker build --no-cache -t cicd-app:latest .
                 '''
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
-                sh 'kubectl rollout restart deployment cicd-app'
+                sh 'kubectl apply --validate=false -f k8s/deployment.yaml'
+                sh 'kubectl apply --validate=false -f k8s/service.yaml'
             }
         }
 
+        stage('Restart Deployment') {
+            steps {
+                sh 'kubectl rollout restart deployment cicd-app'
+            }
+        }
     }
 }
